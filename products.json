@@ -1,0 +1,19 @@
+[
+  {
+    "id": 1,
+    "name": "Premium Oxford Button-Down",
+    "price": "45000",
+    "category": "Shirts",
+    "styles": [
+      "Smart Casual",
+      "Minimal Style"
+    ],
+    "description": "A timeless staple for the modern wardrobe. Made from high-quality Oxford cotton.",
+    "images": [
+      "https://cdn.pixabay.com/photo/2017/10/11/14/32/blur-2841225_1280.jpg"
+    ],
+    "customizable": true,
+    "isNew": false,
+    "isTrending": true
+  }
+]
