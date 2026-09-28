@@ -72,6 +72,13 @@ const initDB = async () => {
       )
     `);
 
+    try {
+      await pool.query('ALTER TABLE products ADD COLUMN colors JSONB DEFAULT \'[]\'::jsonb');
+      console.log('Added colors column to products table.');
+    } catch (err) {
+      // Column might already exist
+    }
+
     // Create Orders Table
     console.log('Ensuring Orders table...');
     await pool.query(`
@@ -112,8 +119,8 @@ const initDB = async () => {
         is_trending: true
       };
       await pool.query(
-        'INSERT INTO products (name, price, category, styles, description, images, customizable, is_new, is_trending) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-        [initialProd.name, initialProd.price, initialProd.category, initialProd.styles, initialProd.description, initialProd.images, initialProd.customizable, initialProd.is_new, initialProd.is_trending]
+        'INSERT INTO products (name, price, category, styles, description, images, customizable, is_new, is_trending, colors) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+        [initialProd.name, initialProd.price, initialProd.category, initialProd.styles, initialProd.description, initialProd.images, initialProd.customizable, initialProd.is_new, initialProd.is_trending, JSON.stringify([])]
       );
     }
 
@@ -131,9 +138,9 @@ app.get('/api/products', async (req, res) => {
 
     const formatted = result.rows.map(p => ({
       ...p,
-      // Ensure images and styles are arrays even if NULL
       images: Array.isArray(p.images) ? p.images : (p.images ? [p.images] : []),
       styles: Array.isArray(p.styles) ? p.styles : (p.styles ? [p.styles] : []),
+      colors: p.colors || [],
       isNew: p.is_new,
       isTrending: p.is_trending
     }));
@@ -255,13 +262,13 @@ app.post('/api/admin/products', async (req, res) => {
   try {
     if (action === 'add') {
       await pool.query(
-        'INSERT INTO products (name, price, category, styles, description, images, customizable, is_new, is_trending) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-        [product.name, product.price, product.category, product.styles, product.description, product.images, product.customizable, product.isNew, product.isTrending]
+        'INSERT INTO products (name, price, category, styles, description, images, customizable, is_new, is_trending, colors) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+        [product.name, product.price, product.category, product.styles, product.description, product.images, product.customizable, product.isNew, product.isTrending, JSON.stringify(product.colors || [])]
       );
     } else if (action === 'edit') {
       await pool.query(
-        'UPDATE products SET name=$1, price=$2, category=$3, styles=$4, description=$5, images=$6, customizable=$7, is_new=$8, is_trending=$9 WHERE id=$10',
-        [product.name, product.price, product.category, product.styles, product.description, product.images, product.customizable, product.isNew, product.isTrending, product.id]
+        'UPDATE products SET name=$1, price=$2, category=$3, styles=$4, description=$5, images=$6, customizable=$7, is_new=$8, is_trending=$9, colors=$10 WHERE id=$11',
+        [product.name, product.price, product.category, product.styles, product.description, product.images, product.customizable, product.isNew, product.isTrending, JSON.stringify(product.colors || []), product.id]
       );
     } else if (action === 'delete') {
       await pool.query('DELETE FROM products WHERE id = $1', [product.id]);
